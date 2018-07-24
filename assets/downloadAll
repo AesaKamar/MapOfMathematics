@@ -1,0 +1,5 @@
+#! /usr/local/bin/fish
+
+# for filename in (ls)
+#   mv $filename (echo (echo $filename | grep -Eo "\d+")".html")
+# end
