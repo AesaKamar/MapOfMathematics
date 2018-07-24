@@ -13,51 +13,83 @@ object Scraper {
   import net.ruippeixotog.scalascraper.model._
 
   val browser = JsoupBrowser()
-  val doc     = browser.parseFile("assets/00.html")
+  def parseFile(fileName: String) = {
+    val doc = browser.parseFile(fileName)
 
-  val content = doc >> element("div #content")
-  val entries =
-    (content >> elementList("div div"))
-      .filter(x => x.hasAttr("class") && x.attr("class").startsWith("indent"))
-      .map { x =>
-        val key = (x >> elements("strong")).map(_.text).headOption
-        val indentLevel =
-          (x >> elements("div")).map(_.attr("class")).map(_.lastOption.map(_.asDigit)).headOption.flatten
-        val description =
-          x.childNodes
-            .filter(_.isInstanceOf[TextNode])
-            .map { case TextNode(c) => c }
-            .toList
-            .fold("")(_.concat(_))
-            .trim
-        val links = (x >> elementList("a"))
-          .map(_.text.trim)
+    val content = doc >> element("div #content")
 
-        (indentLevel, key, description, links)
+    val entries =
+      (content >> elementList("div div"))
+        .filter(x => x.hasAttr("class") && x.attr("class").startsWith("indent"))
+        .map { x =>
+          val key = (x >> elements("strong")).map(_.text).headOption
+          val indentLevel =
+            (x >> elements("div")).map(_.attr("class")).map(_.lastOption.map(_.asDigit)).headOption.flatten
+          val description = {
+            val latexedDescriptions = x.childNodes
+              .map {
+                case TextNode(" ") => None
+                case TextNode(c)   => Some(NormalDescription(c))
+                case ElementNode(e) if (e >> elements("script")).nonEmpty => {
+                  val r = (e >> elements("script")).map(_.innerHtml)
+                  r.headOption.map(MathTexDescription)
+                }
+                case _ => None
+              }
+              .toList
+              .flatten
+            resolveDescription(latexedDescriptions)
+          }
+
+          val links = (x >> elementList("a"))
+            .map(_.text.trim)
+
+          (indentLevel, key, description, links)
+        }
+
+    val parsedEntries = entries
+      .map {
+        case (indentLevel, key, description, links) =>
+          import Parser._
+          val identifier = key
+            .map(x => idParser.parse(x))
+            .flatMap {
+              case Success(v, _)    => Some(v)
+              case Failure(_, _, _) => None
+            }
+          val parsedLinks = links
+            .map(x => idParser.parse(x))
+            .flatMap {
+              case Success(v, _)    => Some(v)
+              case Failure(_, _, _) => None
+            }
+
+          (indentLevel, identifier, description, parsedLinks)
       }
+      .filter(_._2.nonEmpty)
 
-  val parsedEntries = entries
-    .map {
-      case (indentLevel, key, description, links) =>
-        import Parser._
-        val identifier = key
-          .map(x => idParser.parse(x))
-          .flatMap {
-            case Success(v, _)    => Some(v)
-            case Failure(_, _, _) => None
-          }
-        val parsedLinks = links
-          .map(x => idParser.parse(x))
-          .flatMap {
-            case Success(v, _)    => Some(v)
-            case Failure(_, _, _) => None
-          }
+    parsedEntries
+  }
 
-        (indentLevel, identifier, description, parsedLinks)
+  def resolveDescription(descriptions: List[Description]): NormalDescription = {
+    import com.github.tomtung.latex2unicode._
+    val newDescs = descriptions.map {
+      case d: NormalDescription  => d
+      case MathTexDescription(d) => NormalDescription(LaTeX2Unicode.convert(d))
     }
-    .filter(_._2.nonEmpty)
+    val accumulated =
+      newDescs.foldLeft(new StringBuilder) { case (acc, NormalDescription(s)) => acc.append(s) }.toString().trim
+
+    val withoutSeeAlsoAnnotations = accumulated.replaceAll("\\[.*\\]", "")
+
+    NormalDescription(withoutSeeAlsoAnnotations.trim)
+  }
 
 }
+
+sealed trait Description
+final case class NormalDescription(value: String)  extends Description
+final case class MathTexDescription(value: String) extends Description
 
 sealed trait Identifier
 final case class Area(id: String) extends Identifier
@@ -84,4 +116,15 @@ object Parser {
 
   val idParser: Parser[Identifier] = P(specParser | subAreaParser | areaParser)
 
+}
+
+final case class Entry(
+    level: Int,
+    identifier: Identifier,
+    description: String,
+    links: List[Identifier])
+object Entry {
+  def fromTuple(t: (Option[Int], Option[Identifier], NormalDescription, List[Identifier])) = t match {
+    case (Some(level), Some(id), NormalDescription(desc), links) => Entry(level, id, desc, links)
+  }
 }

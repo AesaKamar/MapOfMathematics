@@ -18,6 +18,8 @@ lazy val root = (project in file(".")).settings(
     "org.typelevel"         %% "cats-effect" % "1.0.0-RC2",
     "org.typelevel"         %% "cats-core" % "1.1.0",
     "com.lihaoyi"           %% "pprint" % "0.5.3",
-    "com.lihaoyi"           %% "fastparse" % "1.0.0"
+    "com.lihaoyi"           %% "fastparse" % "0.4.2",
+    "com.github.pathikrit"  %% "better-files" % "3.5.0",
+    "com.github.tomtung"    %% "latex2unicode" % "0.2.4"
   )
 )
