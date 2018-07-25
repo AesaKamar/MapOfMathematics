@@ -9,10 +9,9 @@ object Scraper {
   import net.ruippeixotog.scalascraper.browser.JsoupBrowser
   import net.ruippeixotog.scalascraper.dsl.DSL._
   import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
-  import net.ruippeixotog.scalascraper.dsl.DSL.Parse._
   import net.ruippeixotog.scalascraper.model._
 
-  val browser = JsoupBrowser()
+  private val browser = JsoupBrowser()
   def parseFile(fileName: String) = {
     val doc = browser.parseFile(fileName)
 
@@ -109,7 +108,7 @@ object Parser {
   val digit         = P(CharIn('0' to '9'))
   val capLetter     = P(CharIn('A' to 'Z'))
   val areaParser    = P(digit ~ digit ~ End).!.map(Area)
-  val subAreaParser = P((digit ~ digit).! ~ capLetter.! ~ End).map { case (a, s) => SubArea(a, s) }
+  val subAreaParser = P((digit ~ digit).! ~ capLetter.! ~ (End | "xx" ~ End)).map { case (a, s) => SubArea(a, s) }
   val specParser = P((digit ~ digit).! ~ capLetter.! ~ (digit ~ digit).! ~ End).map {
     case (a, sa, sp) => Specialization(a, sa, sp)
   }
@@ -118,13 +117,74 @@ object Parser {
 
 }
 
-final case class Entry(
+final case class MathSciNetEntry(
     level: Int,
     identifier: Identifier,
     description: String,
     links: List[Identifier])
-object Entry {
+object MathSciNetEntry {
   def fromTuple(t: (Option[Int], Option[Identifier], NormalDescription, List[Identifier])) = t match {
-    case (Some(level), Some(id), NormalDescription(desc), links) => Entry(level, id, desc, links)
+    case (Some(level), Some(id), NormalDescription(desc), links) => MathSciNetEntry(level, id, desc, links)
   }
 }
+
+object EntryOps {
+  def entryToSigmaNode(entry: MathSciNetEntry): SigmaNode = {
+    val id     = identifierAsString(entry.identifier)
+    val label  = entry.description
+    val (x, y) = (0, 0)
+    val size   = 3
+
+    SigmaNode(id, label, x, y, size)
+  }
+
+  def identifierAsString(identifier: Identifier): String = {
+    identifier match {
+      case Area(a)                 => a
+      case SubArea(a, b)           => a + b
+      case Specialization(a, b, c) => a + b + c
+    }
+  }
+  val rootNodeId = "."
+  def entryToSigmaEdges(entry: MathSciNetEntry): List[SigmaEdge] = {
+    val parentEdge = entry.identifier match {
+      case Area(a) => {
+        val source = rootNodeId
+        val target = a
+        SigmaEdge(s"$source->$target", source, target)
+      }
+      case SubArea(a, b) => {
+        val source = a
+        val target = a + b
+        SigmaEdge(s"$source->$target", source, target)
+      }
+      case Specialization(a, b, c) => {
+        val source = a + b
+        val target = a + b + c
+        SigmaEdge(s"$source->$target", source, target)
+      }
+    }
+
+    val links = entry.links.map { linkTarget =>
+      val source = identifierAsString(entry.identifier)
+      val target = identifierAsString(linkTarget)
+      SigmaEdge(s"$source->$target", source, target)
+    }
+
+    parentEdge :: links
+
+  }
+
+}
+
+final case class SigmaNode(
+    id: String,
+    label: String,
+    x: Double,
+    y: Double,
+    size: Double)
+
+final case class SigmaEdge(
+    id: String,
+    source: String,
+    target: String)
