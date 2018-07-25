@@ -37,8 +37,8 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
 
     val (nodesJson, edgesJson) = parseResults
 
-    file"out/nodes.json" < nodesJson.toString()
-    file"out/edges.json" < edgesJson.toString()
+    file"docs/nodes.json" < nodesJson.toString
+    file"docs/edges.json" < edgesJson.toString
 
     Future(succeed)
   }
