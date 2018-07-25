@@ -31,8 +31,11 @@
           nodes: nodes,
           edges: edges
         })
+        s.refresh();
       })
     })
+
+    s.startForceAtlas2({});
 
 
     // Finally, let's ask our sigma instance to refresh:
