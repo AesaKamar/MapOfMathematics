@@ -25,8 +25,15 @@
 
     // Then, let's add some data to display:
 
-    $.get("nodes.json", (data) => {s.graph.nodes = data})
-    $.get("edges.json", (data) => {s.graph.edges = data})
+    $.get("nodes.json", (nodes) => {
+      $.get("edges.json", (edges) => {
+        s.graph.read({
+          nodes: nodes,
+          edges: edges
+        })
+      })
+    })
+
 
     // Finally, let's ask our sigma instance to refresh:
     s.refresh();
