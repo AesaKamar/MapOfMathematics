@@ -4,6 +4,7 @@ import cats._
 import cats.data._
 import cats.effect._
 import fastparse.core.Parsed.{Failure, Success}
+import java.util.Random
 
 object Scraper {
   import net.ruippeixotog.scalascraper.browser.JsoupBrowser
@@ -129,6 +130,11 @@ object MathSciNetEntry {
 }
 
 object EntryOps {
+
+  private val random = new Random(12345L)
+
+  def genRandomDouble = (random.nextDouble() - 0.5) * 10
+
   def entryToSigmaNode(entry: MathSciNetEntry): SigmaNode = {
     val id     = identifierAsString(entry.identifier)
     val label  = entry.description

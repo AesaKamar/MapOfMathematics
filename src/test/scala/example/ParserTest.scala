@@ -44,9 +44,11 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
     val missingTargets = edges
       .flatMap(e => nodes.filterNot(_.id == e.target).headOption.map(_ => e))
 
+    val nodesWithRandomPostions =
+      nodes.map(x => SigmaNode(x.id, x.label, EntryOps.genRandomDouble, EntryOps.genRandomDouble, x.size))
     val edgesWithSourceAndTarget = edges -- (missingSources ++ missingTargets)
 
-    file"docs/nodes.json" < nodes.asJson.toString
+    file"docs/nodes.json" < nodesWithRandomPostions.asJson.toString
     file"docs/edges.json" < edgesWithSourceAndTarget.asJson.toString
 
     Future(succeed)
