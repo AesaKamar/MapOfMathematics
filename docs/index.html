@@ -32,13 +32,15 @@
       }
       s = new sigma({
         graph: g,
-        drawLabels: false,
+        settings: {
+          labelThreshold: 100
+        },
         renderers: [
           {
             container: document.getElementById('container'),
             type: 'webgl' // sigma.renderers.canvas works as well
           }
-        ]
+        ],
       });
       s.startForceAtlas2({worker: true, barnesHutOptimize: true});
     })})
