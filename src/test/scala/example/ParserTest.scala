@@ -31,6 +31,7 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
       .map(_.path.toString)
       .filter(x => x.endsWith("html"))
       .sorted
+//      .take(1)
 
     val sigmaRoot = SigmaNode(".", "Truth", 0, 0, 3)
     val parseResults =
@@ -40,9 +41,9 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
     val (nodes, edges) = parseResults
 
     val missingSources = edges
-      .flatMap(e => nodes.filterNot(_.id == e.source).headOption.map(_ => e))
+      .flatMap(e => if (!nodes.exists(_.id == e.source)) { Some(e) } else { None })
     val missingTargets = edges
-      .flatMap(e => nodes.filterNot(_.id == e.target).headOption.map(_ => e))
+      .flatMap(e => if (!nodes.exists(_.id == e.target)) { Some(e) } else { None })
 
     val nodesWithRandomPostions =
       nodes.map(x => SigmaNode(x.id, x.label, EntryOps.genRandomDouble, EntryOps.genRandomDouble, x.size))

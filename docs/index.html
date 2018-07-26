@@ -22,25 +22,26 @@
 <script src="js/sigma.plugins.dragNodes.min.js"></script>
 <script>
     // Let's first initialize sigma:
-    var s = new sigma('container');
-
-    // Then, let's add some data to display:
+    var s, g
 
     $.get("nodes.json", (nodes) => {
-      $.get("edges.json", (edges) => {
-        s.graph.read({
-          nodes: nodes,
-          edges: edges
-        })
-        s.refresh();
-      })
-    })
-
-    s.startForceAtlas2({});
-
-
-    // Finally, let's ask our sigma instance to refresh:
-    s.refresh();
+    $.get("edges.json", (edges) => {
+      g = {
+        nodes: nodes,
+        edges: edges
+      }
+      s = new sigma({
+        graph: g,
+        drawLabels: false,
+        renderers: [
+          {
+            container: document.getElementById('container'),
+            type: 'webgl' // sigma.renderers.canvas works as well
+          }
+        ]
+      });
+      s.startForceAtlas2({worker: true, barnesHutOptimize: true});
+    })})
   </script>
 </body>
 </html>
