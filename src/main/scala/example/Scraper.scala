@@ -159,13 +159,13 @@ object EntryOps {
       group: Int
     ): (Double, Double) = {
     val totalNumberOfGroups   = 100.0
-    val degreesToMovePerGroup = 360 / totalNumberOfGroups
+    val degreesToMovePerGroup = 360.0 / totalNumberOfGroups
     val radsToMovePerGroup    = Math.toRadians(degreesToMovePerGroup)
 
 //    val radius = level * 10
 
-    val posX = (Math.cos(radsToMovePerGroup * group) * level) + genRandomDouble
-    val posY = (Math.sin(radsToMovePerGroup * group) * level) + genRandomDouble
+    val posX = (Math.cos(radsToMovePerGroup * group) * level) + (genRandomDouble / math.log(level * 5))
+    val posY = (Math.sin(radsToMovePerGroup * group) * level) + (genRandomDouble / math.log(level * 5))
 
     (posX, posY)
   }
@@ -175,9 +175,9 @@ object EntryOps {
     val label  = entry.description
     val (x, y) = placeParticle(entry.level, entry.identifier.group)
     val size = entry.level match {
-      case 1 => 3
-      case 2 => 2
-      case 3 => 1
+      case 1 => 6
+      case 2 => 4
+      case 3 => 2
     }
 
     SigmaNode(id, label, x, y, size)
@@ -189,17 +189,17 @@ object EntryOps {
       case Area(a) => {
         val source = rootNodeId
         val target = a
-        SigmaEdge(s"$source->$target", source, target)
+        SigmaEdge(s"$source->$target", source, target, 1)
       }
       case SubArea(a, b) => {
         val source = a
         val target = a + b
-        SigmaEdge(s"$source->$target", source, target)
+        SigmaEdge(s"$source->$target", source, target, 0.4)
       }
       case Specialization(a, b, c) => {
         val source = a + b
         val target = a + b + c
-        SigmaEdge(s"$source->$target", source, target)
+        SigmaEdge(s"$source->$target", source, target, 0.2)
       }
     }
 
@@ -221,9 +221,12 @@ final case class SigmaNode(
     label: String,
     x: Double,
     y: Double,
-    size: Double)
+    size: Double,
+    color: Option[String] = Some("red"))
 
 final case class SigmaEdge(
     id: String,
     source: String,
-    target: String)
+    target: String,
+    size: Double,
+    color: Option[String] = Some("gray"))
