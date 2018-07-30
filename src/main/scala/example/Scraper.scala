@@ -222,11 +222,11 @@ final case class SigmaNode(
     x: Double,
     y: Double,
     size: Double,
-    color: Option[String] = Some("red"))
+    color: Option[String] = None)
 
 final case class SigmaEdge(
     id: String,
     source: String,
     target: String,
     size: Double,
-    color: Option[String] = Some("gray"))
+    color: Option[String] = None)
