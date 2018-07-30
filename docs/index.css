@@ -1,0 +1,16 @@
+header {
+    background-color: #F1F1F1;
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+}
+
+footer {
+    background-color: #F1F1F1;
+    text-align: center;
+    padding: 10px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
