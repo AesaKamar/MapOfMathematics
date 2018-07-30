@@ -21,6 +21,16 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
 
     (sigmaNodes, sigmaEdges)
   }
+  def distinctBy[L, E](list: List[L])(f: L => E): List[L] =
+    list
+      .foldLeft((Vector.empty[L], Set.empty[E])) {
+        case ((acc, set), item) =>
+          val key = f(item)
+          if (set.contains(key)) (acc, set)
+          else (acc :+ item, set + key)
+      }
+      ._1
+      .toList
 
   "listing files" in {
     import better.files._
@@ -33,10 +43,10 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
       .sorted
 //      .take(1)
 
-    val sigmaRoot = SigmaNode(".", "Truth", 0, 0, 3)
+    val sigmaRoot = SigmaNode(".", "Truth", 0, 0, 1)
     val parseResults =
       paths.map(parseHtmlToEntryNodesAndEdges).unzip match {
-        case (nodes, edges) => (nodes.flatten.toSet.+(sigmaRoot), edges.flatten.toSet)
+        case (nodesi, edgesi) => (distinctBy(nodesi.flatten)(_.id).toSet + sigmaRoot, edgesi.flatten.toSet)
       }
     val (nodes, edges) = parseResults
 
@@ -45,11 +55,9 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
     val missingTargets = edges
       .flatMap(e => if (!nodes.exists(_.id == e.target)) { Some(e) } else { None })
 
-    val nodesWithRandomPostions =
-      nodes.map(x => SigmaNode(x.id, x.label, EntryOps.genRandomDouble, EntryOps.genRandomDouble, x.size))
     val edgesWithSourceAndTarget = edges -- (missingSources ++ missingTargets)
 
-    file"docs/nodes.json" < nodesWithRandomPostions.asJson.toString
+    file"docs/nodes.json" < nodes.asJson.toString
     file"docs/edges.json" < edgesWithSourceAndTarget.asJson.toString
 
     Future(succeed)

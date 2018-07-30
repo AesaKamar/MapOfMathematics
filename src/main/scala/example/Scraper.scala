@@ -30,10 +30,9 @@ object Scraper {
               .map {
                 case TextNode(" ") => None
                 case TextNode(c)   => Some(NormalDescription(c))
-                case ElementNode(e) if (e >> elements("script")).nonEmpty => {
+                case ElementNode(e) if (e >> elements("script")).nonEmpty =>
                   val r = (e >> elements("script")).map(_.innerHtml)
                   r.headOption.map(MathTexDescription)
-                }
                 case _ => None
               }
               .toList
@@ -102,6 +101,26 @@ final case class Specialization(
     subId: String,
     specId: String)
   extends Identifier
+object Identifier {
+  implicit class IdentifierHasGroup(identifier: Identifier) {
+    def group = identifier match {
+      case Area(id)                              => id.toInt
+      case SubArea(areaId, subId)                => areaId.toInt
+      case Specialization(areaId, subId, specId) => areaId.toInt
+    }
+  }
+
+  implicit class IdentifierHasString(identifier: Identifier) {
+    def asString: String = {
+      identifier match {
+        case Area(a)                 => a
+        case SubArea(a, b)           => a + b
+        case Specialization(a, b, c) => a + b + c
+      }
+    }
+  }
+
+}
 
 object Parser {
   import fastparse.all._
@@ -133,24 +152,37 @@ object EntryOps {
 
   private val random = new Random(12345L)
 
-  def genRandomDouble = (random.nextDouble() - 0.5) * 10
+  def genRandomDouble = (random.nextDouble() - 0.5)
+
+  def placeParticle(
+      level: Int,
+      group: Int
+    ): (Double, Double) = {
+    val totalNumberOfGroups   = 100.0
+    val degreesToMovePerGroup = 360 / totalNumberOfGroups
+    val radsToMovePerGroup    = Math.toRadians(degreesToMovePerGroup)
+
+//    val radius = level * 10
+
+    val posX = (Math.cos(radsToMovePerGroup * group) * level) + genRandomDouble
+    val posY = (Math.sin(radsToMovePerGroup * group) * level) + genRandomDouble
+
+    (posX, posY)
+  }
 
   def entryToSigmaNode(entry: MathSciNetEntry): SigmaNode = {
-    val id     = identifierAsString(entry.identifier)
+    val id     = entry.identifier.asString
     val label  = entry.description
-    val (x, y) = (0, 0)
-    val size   = 3
+    val (x, y) = placeParticle(entry.level, entry.identifier.group)
+    val size = entry.level match {
+      case 1 => 3
+      case 2 => 2
+      case 3 => 1
+    }
 
     SigmaNode(id, label, x, y, size)
   }
 
-  def identifierAsString(identifier: Identifier): String = {
-    identifier match {
-      case Area(a)                 => a
-      case SubArea(a, b)           => a + b
-      case Specialization(a, b, c) => a + b + c
-    }
-  }
   val rootNodeId = "."
   def entryToSigmaEdges(entry: MathSciNetEntry): List[SigmaEdge] = {
     val parentEdge = entry.identifier match {
@@ -171,11 +203,12 @@ object EntryOps {
       }
     }
 
-    val links = entry.links.map { linkTarget =>
-      val source = identifierAsString(entry.identifier)
-      val target = identifierAsString(linkTarget)
-      SigmaEdge(s"$source->$target", source, target)
-    }
+//    val links = entry.links.map { linkTarget =>
+//      val source = entry.identifier.asString
+//      val target = linkTarget.asString
+//      SigmaEdge(s"$source->$target", source, target)
+//    }
+    val links = List.empty
 
     parentEdge :: links
 
