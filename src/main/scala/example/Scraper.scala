@@ -203,12 +203,12 @@ object EntryOps {
       }
     }
 
-//    val links = entry.links.map { linkTarget =>
-//      val source = entry.identifier.asString
-//      val target = linkTarget.asString
-//      SigmaEdge(s"$source->$target", source, target)
-//    }
-    val links = List.empty
+    val links = entry.links.map { linkTarget =>
+      val source = entry.identifier.asString
+      val target = linkTarget.asString
+      SigmaEdge(s"$source->$target", source, target, 0.2)
+    }
+//    val links = List.empty
 
     parentEdge :: links
 
