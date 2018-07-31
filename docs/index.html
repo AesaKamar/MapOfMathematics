@@ -1,10 +1,12 @@
 <html>
+
 <head>
   <title>Map of Mathematics</title>
   <style type="text/css">
     body {
       margin: 0;
     }
+
     #container {
       position: absolute;
       width: 100%;
@@ -12,74 +14,101 @@
     }
   </style>
 </head>
+
 <body>
 
-<header>The Map of Mathematics</header>
-<button onclick="s.startForceAtlas2({linLogMode : true})" style="z-index:1000;">Force Atlas 2 On</button>
-<button onclick="s.stopForceAtlas2()" style="z-index:1000;">Force Atlas 2 Off</button>
-<div id="container"></div>
-<script src="js/jquery.min.js"></script>
-<script src="js/lodash.min.js"></script>
-<script src="js/sigma.min.js"></script>
-<script src="js/sigma.layout.forceAtlas2.min.js"></script>
-<script src="js/sigma.layout.noverlap.min.js"></script>
-<script src="js/sigma.plugins.animate.min.js"></script>
-<script src="js/sigma.plugins.dragNodes.min.js"></script>
-<script src="js/sigma.plugins.filter.min.js"></script>
-<link rel="stylesheet" href="index.css">
-<script>
-    // Let's first initialize sigma:
+  <header>The Map of Mathematics</header>
+  <button onclick="s.startForceAtlas2({linLogMode : true})" style="z-index:1000;">Force Atlas 2 On</button>
+  <button onclick="s.stopForceAtlas2()" style="z-index:1000;">Force Atlas 2 Off</button>
+  <div id="container"></div>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/lodash.min.js"></script>
+  <script src="js/sigma.min.js"></script>
+  <script src="js/sigma.layout.forceAtlas2.min.js"></script>
+  <script src="js/sigma.layout.noverlap.min.js"></script>
+  <script src="js/sigma.plugins.animate.min.js"></script>
+  <script src="js/sigma.plugins.dragNodes.min.js"></script>
+  <script src="js/sigma.plugins.filter.min.js"></script>
+  <link rel="stylesheet" href="index.css">
+  <script>
+    // NB: Variables are stateful and must be initialized early
     var s, g, f
 
     $.get("nodes.json", (nodes) => {
-    $.get("edges.json", (edges) => {
-      g = {
-        nodes: nodes,
-        edges: edges
-      }
-      s = new sigma({
-        graph: g,
-        settings: {
-          labelThreshold: 100,
-          drawEdgeLabels: false,
-          singleHover: true,
-          minEdgeSize: 0.5,
-          maxEdgeSize: 1.0,
-          minNodeSize: 1,
-          maxNodeSize: 8
-        },
-        renderers: [
-          {
+      $.get("edges.json", (edges) => {
+        g = {
+          nodes: nodes,
+          edges: edges
+        }
+        s = new sigma({
+          graph: g,
+          settings: {
+            labelThreshold: 100,
+            drawEdgeLabels: false,
+            singleHover: true,
+            minEdgeSize: 0.5,
+            maxEdgeSize: 1.0,
+            minNodeSize: 1,
+            maxNodeSize: 8
+          },
+          renderers: [{
             container: document.getElementById('container'),
             type: 'canvas' // sigma.renderers.canvas works as well
+          }],
+        });
+        f = new sigma.plugins.filter(s);
+
+        // NB: The active filter must be held onto for the toggle event
+        var activeFilter
+        var activeNode
+
+
+
+        // Sets up the function which handles click events and returns a mutable edge
+        // filter within a thunk
+        var filterToggle = (clEv) => {
+          // If the clicked node is already active, return the same filter
+          if (activeNode !== undefined && activeNode.id === clEv.data.node.id) {
+            return activeFilter
           }
-        ],
-      });
-      f = new sigma.plugins.filter(s);
-
-      // NB: The active filter must be held onto for the toggle event
-      var activeFilter
-      var filterToggle = (clEv) => {
-        activeFilter = f.edgesBy(ed => {
-          return (ed.source === clEv.data.node.id)
-        }, 'clicked')
-        return activeFilter
-      }
-
-
-      s.bind('clickNode', (ev) => {
-        filterToggle(ev).apply()
-        s.refresh();
-      });
-
-      s.bind('clickStage', (ev) => {
-        if (activeFilter !== undefined){
-          activeFilter.undo().apply()
-          s.refresh();
+          // Else do work to set the filter
+          else {
+            activeNode = clEv.data.node
+            // Clear the active filter
+            if (activeFilter !== undefined) {
+              activeFilter.undo().apply()
+            }
+            // Filter edges where either:
+            //    The source is the clicked node
+            //    The target is the clicked node
+            activeFilter = f.edgesBy(ed => {
+              return (ed.source === activeNode.id || ed.target === clEv.data.node.id)
+            }, 'clicked')
+          }
+          return activeFilter
         }
-      });
-    })})
+
+
+        // Bind a function to the sigma `clickNode` event which toggles the filter
+        s.bind('clickNode', (ev) => {
+          filterToggle(ev).apply()
+          s.refresh();
+        });
+
+        // Bind a function to the sigma `clickStage` event which:
+        //    Unsets the activeNode
+        //    Unsets the filter
+        s.bind('clickStage', (ev) => {
+          activeNode = undefined
+          if (activeFilter !== undefined) {
+            activeFilter.undo().apply()
+            s.refresh();
+          }
+        });
+      })
+    })
   </script>
-<footer>By Aesa Kamar</footer>
+  <footer>By Aesa Kamar</footer>
 </body>
+
 </html>
