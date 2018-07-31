@@ -3,6 +3,7 @@ package example
 import cats._
 import cats.data._
 import cats.effect._
+import cats.implicits._
 import fastparse.core.Parsed.{Failure, Success}
 import java.util.Random
 
@@ -180,7 +181,7 @@ object EntryOps {
       case 3 => 2
     }
 
-    SigmaNode(id, label, x, y, size)
+    SigmaNode(id, label, x, y, size, "#1e1e1e".some)
   }
 
   val rootNodeId = "."
@@ -189,26 +190,26 @@ object EntryOps {
       case Area(a) => {
         val source = rootNodeId
         val target = a
-        SigmaEdge(s"$source->$target", source, target, 1)
+        SigmaEdge(s"$source->$target", source, target, 1, "#a3a3a3".some)
       }
       case SubArea(a, b) => {
         val source = a
         val target = a + b
-        SigmaEdge(s"$source->$target", source, target, 0.4)
+        SigmaEdge(s"$source->$target", source, target, 0.4, "#a3a3a3".some)
       }
       case Specialization(a, b, c) => {
         val source = a + b
         val target = a + b + c
-        SigmaEdge(s"$source->$target", source, target, 0.2)
+        SigmaEdge(s"$source->$target", source, target, 0.2, "#a3a3a3".some)
       }
     }
 
-    val links = entry.links.map { linkTarget =>
-      val source = entry.identifier.asString
-      val target = linkTarget.asString
-      SigmaEdge(s"$source->$target", source, target, 0.2)
-    }
-//    val links = List.empty
+//    val links = entry.links.map { linkTarget =>
+//      val source = entry.identifier.asString
+//      val target = linkTarget.asString
+//      SigmaEdge(s"$source->$target", source, target, 0.2)
+//    }
+    val links = List.empty
 
     parentEdge :: links
 
