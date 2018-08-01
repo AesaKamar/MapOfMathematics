@@ -7,7 +7,7 @@ import org.scalatest.OptionValues._
 import scala.concurrent.Future
 
 class ScraperTest extends AsyncFreeSpec with Matchers {
-  import Scraper._
+  import HTMLScraper._
   import io.circe._, io.circe.generic.auto._, io.circe.syntax._
   import Inspectors._
 
@@ -36,10 +36,10 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
     import better.files._
     import better.files.Dsl._
     import File._
-    val files = ls(file"assets/")
+    val files = ls(file"assets/html")
     val paths = files.toList
       .map(_.path.toString)
-      .filter(x => x.endsWith("html"))
+      .filter(x => x.endsWith(".html"))
       .sorted
 //      .take(25)
 
