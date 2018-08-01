@@ -180,8 +180,13 @@ object EntryOps {
       case 2 => 4
       case 3 => 2
     }
+    val color = entry.level match {
+      case 1 => "#1e1e1e"
+      case 2 => "#1e1e1e"
+      case 3 => "#1e1e1e"
+    }
 
-    SigmaNode(id, label, x, y, size, "#1e1e1e".some)
+    SigmaNode(id, label, x, y, size, color.some)
   }
 
   val rootNodeId = "."
@@ -190,28 +195,29 @@ object EntryOps {
       case Area(a) => {
         val source = rootNodeId
         val target = a
-        SigmaEdge(s"$source->$target", source, target, 1, "#a3a3a3".some)
+        SigmaEdge(s"$source->$target", source, target, 0.25, 1, "#a3a3a3".some)
+        None
       }
       case SubArea(a, b) => {
         val source = a
         val target = a + b
-        SigmaEdge(s"$source->$target", source, target, 0.4, "#a3a3a3".some)
+        SigmaEdge(s"$source->$target", source, target, 10, 1, "#a3a3a3".some).some
       }
       case Specialization(a, b, c) => {
         val source = a + b
         val target = a + b + c
-        SigmaEdge(s"$source->$target", source, target, 0.2, "#a3a3a3".some)
+        SigmaEdge(s"$source->$target", source, target, 2, 1, "#a3a3a3".some).some
       }
     }
 
-//    val links = entry.links.map { linkTarget =>
-//      val source = entry.identifier.asString
-//      val target = linkTarget.asString
-//      SigmaEdge(s"$source->$target", source, target, 0.2)
-//    }
-    val links = List.empty
+    val links = entry.links.map { linkTarget =>
+      val source = entry.identifier.asString
+      val target = linkTarget.asString
+      SigmaEdge(s"$source->$target", source, target, 5, 1, "#dbdbdb".some)
+    }
+//    val links = List.empty
 
-    parentEdge :: links
+    parentEdge.toList ++ links
 
   }
 
@@ -229,5 +235,6 @@ final case class SigmaEdge(
     id: String,
     source: String,
     target: String,
+    weight: Double,
     size: Double,
     color: Option[String] = None)

@@ -18,8 +18,9 @@
 <body>
 
   <header>The Map of Mathematics</header>
-  <button onclick="s.startForceAtlas2({linLogMode : true})" style="z-index:1000;">Force Atlas 2 On</button>
-  <button onclick="s.stopForceAtlas2()" style="z-index:1000;">Force Atlas 2 Off</button>
+
+  <button onclick="beginSimulation()" style="z-index:1000;">Force Atlas 2 On</button>
+  <button onclick="endSimulation()" style="z-index:1000;">Force Atlas 2 Off</button>
   <div id="container"></div>
   <script src="js/jquery.min.js"></script>
   <script src="js/lodash.min.js"></script>
@@ -33,6 +34,17 @@
   <script>
     // NB: Variables are stateful and must be initialized early
     var s, g, f
+
+    let beginSimulation = () => s.startForceAtlas2({
+      linLogMode: true,
+      gravity: 1.0,
+      theta: 0.75,
+      // scalingRatio: 10,
+      edgeWeightInfluence: 1,
+      // outboundAttractionDistribution : true,
+    });
+
+    let endSimulation = () => s.stopForceAtlas2();
 
     $.get("nodes.json", (nodes) => {
       $.get("edges.json", (edges) => {

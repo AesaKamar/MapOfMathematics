@@ -17304,14 +17304,6 @@
     "color" : "#1e1e1e"
   },
   {
-    "id" : ".",
-    "label" : "Truth",
-    "x" : 0.0,
-    "y" : 0.0,
-    "size" : 7.0,
-    "color" : null
-  },
-  {
     "id" : "74H65",
     "label" : "Chaotic behavior",
     "x" : -0.3135075052962149,

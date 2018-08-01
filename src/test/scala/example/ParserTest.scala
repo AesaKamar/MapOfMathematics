@@ -41,12 +41,12 @@ class ScraperTest extends AsyncFreeSpec with Matchers {
       .map(_.path.toString)
       .filter(x => x.endsWith("html"))
       .sorted
-//      .take(1)
+//      .take(25)
 
-    val sigmaRoot = SigmaNode(".", "Truth", 0, 0, 7)
+//    val sigmaRoot = SigmaNode(".", "Truth", 0, 0, 7)
     val parseResults =
       paths.map(parseHtmlToEntryNodesAndEdges).unzip match {
-        case (nodesi, edgesi) => (distinctBy(nodesi.flatten)(_.id).toSet + sigmaRoot, edgesi.flatten.toSet)
+        case (nodesi, edgesi) => (distinctBy(nodesi.flatten)(_.id).toSet, edgesi.flatten.toSet)
       }
     val (nodes, edges) = parseResults
 
